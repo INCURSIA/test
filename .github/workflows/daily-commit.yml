@@ -3,7 +3,7 @@ name: Daily Commit Bot
 on:
   schedule:
     - cron: '30 2 * * *'  # Runs daily at 02:30 UTC
-  workflow_dispatch:  # Allows manual triggering
+  workflow_dispatch:    # Allows manual triggering for testing
 
 jobs:
   commit-job:
@@ -12,12 +12,19 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false  # We'll set up our own authentication
 
-      - name: 23f2005702@ds.study.iitm.ac.in  # Step must include this email
+      - name: Set up Git credentials (23f2005702@ds.study.iitm.ac.in)
         run: |
-          echo "Automated commit on $(date)" >> daily-log.txt
-          git config --global user.name "GitHub Action Bot"
-          git config --global user.email "23f2005702@ds.study.iitm.ac.in"
-          git add .
-          git commit -m "Automated commit on $(date)"
-          git push
+          git config user.name "GitHub Action Bot"
+          git config user.email "23f2005702@ds.study.iitm.ac.in"
+          git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+
+      - name: Update commit file (23f2005702@ds.study.iitm.ac.in)
+        run: |
+          # Append a new line to force a change
+          echo "Commit made at $(date)" >> commit.log
+          git add commit.log
+          git commit -m "Daily commit $(date)" || echo "No changes to commit"
+          git push origin HEAD:$(git rev-parse --abbrev-ref HEAD)
